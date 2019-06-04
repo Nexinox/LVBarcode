@@ -1,8 +1,8 @@
 package com.example.lvbarcode;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -15,8 +15,6 @@ import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.vision.barcode.Barcode;
@@ -43,16 +41,12 @@ public class MainActivity extends AppCompatActivity implements BarcodeReader.Bar
 
         if (isOnline()) {
 
-            SSLContext sc = null;
+            SSLContext sc;
             try {
                 sc = SSLContext.getInstance("TLS");
                 sc.init(null, new TrustManager[] { new TrustAllX509TrustManager() }, new java.security.SecureRandom());
                 HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-                HttpsURLConnection.setDefaultHostnameVerifier( new HostnameVerifier(){
-                    public boolean verify(String string, SSLSession ssls) {
-                        return true;
-                    }
-                });
+                HttpsURLConnection.setDefaultHostnameVerifier((string, ssls) -> true);
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             } catch (KeyManagementException e) {
@@ -129,23 +123,9 @@ public class MainActivity extends AppCompatActivity implements BarcodeReader.Bar
                             });
 
 
-                            MainActivity.this.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Namebuilder.show();
-                                }
-                            });
-
-
-
-
-
+                            MainActivity.this.runOnUiThread(Namebuilder::show);
 
                         } else if (response.equals("n")) {
-
-
-
-
 
                             AlertDialog.Builder Durationbuilder = new AlertDialog.Builder(MainActivity.this);
                             Durationbuilder.setTitle("Haltbarkeit Eingeben: ");
@@ -157,61 +137,36 @@ public class MainActivity extends AppCompatActivity implements BarcodeReader.Bar
                             Durationbuilder.setView(DurationInput);
 
 
-                            Durationbuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    ArticleDuration = Integer.parseInt(DurationInput.getText().toString());
+                            Durationbuilder.setPositiveButton("OK", (dialog, which) -> {
+                                ArticleDuration = Integer.parseInt(DurationInput.getText().toString());
 
-                                    String CreateArticleURL = "http://192.168.43.110:8080/Article/rest/"+ean+"/"+ArticleName+"/"+ArticleDuration;
+                                String CreateArticleURL = "http://192.168.43.110:8080/Article/rest/"+ean+"/"+ArticleName+"/"+ArticleDuration;
 
-                                    StringRequest CreatestringRequest = new StringRequest(Request.Method.POST, CreateArticleURL,
-                                            new Response.Listener<String>() {
-                                                @Override
-                                                public void onResponse(String Createresponse) {
+                                StringRequest CreatestringRequest = new StringRequest(Request.Method.POST, CreateArticleURL,
+                                        Createresponse -> {
 
-                                                    if (Createresponse.equals("Workde")){
-                                                        MainActivity.this.runOnUiThread(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                Toast.makeText(MainActivity.this, "Added Sucsessfully", Toast.LENGTH_SHORT).show();
-                                                                barcodeReader.resumeScanning();
-                                                            }
-                                                        });
-                                                    }
+                                            if (Createresponse.equals("Workde")){
+                                                MainActivity.this.runOnUiThread(() -> {
+                                                    Toast.makeText(MainActivity.this, "Added Sucsessfully", Toast.LENGTH_SHORT).show();
+                                                    barcodeReader.resumeScanning();
+                                                });
+                                            }
 
-                                                }
-                                            }, new Response.ErrorListener() {
-                                        @Override
-                                        public void onErrorResponse(VolleyError error) {
-                                            MainActivity.this.runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    Toast.makeText(MainActivity.this, "error", Toast.LENGTH_LONG).show();
-                                                }
-                                            });
+                                        }, error -> {
+                                            MainActivity.this.runOnUiThread(() -> Toast.makeText(MainActivity.this, "error", Toast.LENGTH_LONG).show());
                                             error.printStackTrace();
                                             barcodeReader.resumeScanning();
-                                        }
-                                    });
-                                    queue.add(CreatestringRequest);
+                                        });
+                                queue.add(CreatestringRequest);
 
-                                }
                             });
-                            Durationbuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                    barcodeReader.resumeScanning();
-                                }
+                            Durationbuilder.setNegativeButton("Cancel", (dialog, which) -> {
+                                dialog.cancel();
+                                barcodeReader.resumeScanning();
                             });
 
 
-                            MainActivity.this.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Durationbuilder.show();
-                                }
-                            });
+                            MainActivity.this.runOnUiThread(Durationbuilder::show);
 
                             AlertDialog.Builder Namebuilder = new AlertDialog.Builder(MainActivity.this);
                             Namebuilder.setTitle("Namen Eingeben: ");
@@ -223,36 +178,16 @@ public class MainActivity extends AppCompatActivity implements BarcodeReader.Bar
                             Namebuilder.setView(Nameinput);
 
 
-                            Namebuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    ArticleName = Nameinput.getText().toString();
-                                }
-                            });
-                            Namebuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            });
+                            Namebuilder.setPositiveButton("OK", (dialog, which) -> ArticleName = Nameinput.getText().toString());
+                            Namebuilder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
-                            MainActivity.this.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Namebuilder.show();
-                                }
-                            });
+                            MainActivity.this.runOnUiThread(Namebuilder::show);
 
 
 
                         }
 
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    error.printStackTrace();
-                }
-            });
+                    }, Throwable::printStackTrace);
 
             queue.add(stringRequest);
 
@@ -260,9 +195,10 @@ public class MainActivity extends AppCompatActivity implements BarcodeReader.Bar
     }
 
     @Override
-    public void onScannedMultiple(List<Barcode> list) {
+    public void onScannedMultiple(List<Barcode> barcodes) {
 
     }
+
 
     @Override
     public void onBitmapScanned(SparseArray<Barcode> sparseArray) {
@@ -285,15 +221,7 @@ public class MainActivity extends AppCompatActivity implements BarcodeReader.Bar
 
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
 
-        if (netInfo != null && netInfo.isConnectedOrConnecting()) {
-
-            return true;
-
-        } else {
-
-            return false;
-
-        }
+        return netInfo != null && netInfo.isConnectedOrConnecting();
 
     }
 
