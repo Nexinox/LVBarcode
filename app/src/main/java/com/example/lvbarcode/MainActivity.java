@@ -1,6 +1,5 @@
 package com.example.lvbarcode;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -23,10 +22,8 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 
 import info.androidhive.barcode.BarcodeReader;
